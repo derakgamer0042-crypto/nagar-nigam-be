@@ -6,7 +6,8 @@ export const calculateRate = async(roadType , constructionType)=>{
 	const rates = await Rate.findOne().sort({createdAt : -1})
 	console.log("rates are : " , rates)
 	console.log("roadtype" , roadType , "constructionType" , constructionType)
-	return rates[roadType][constructionType] || null
+	return  {carpetRate : rates[roadType][constructionType] ,  emptyRate : rates[roadType][plot] }
+	// return rates[roadType][constructionType] || null
 }
 
 export const getCommercialMultiplier = (propertyType)=>{
@@ -63,17 +64,17 @@ export const calculateTax = async(floorsData , roadType , constructionType , pro
 	}
 
 	// here we are calculating RATE on the basis of roadType and constructionType
-	const RATE = await calculateRate(roadType , constructionType)
+	const {carpetRate : CARPET_RATE , emptyRate : EMPTY_RATE} = await calculateRate(roadType , constructionType)
 
 	// const COMMERCIAL_MULTIPLIER = 3
 	// here we are calculating the multiplier for commercial area
 	const COMMERCIAL_MULTIPLIER = getCommercialMultiplier(propertyType) 
 	console.log("multiplier is : " , COMMERCIAL_MULTIPLIER)
 
-	const emptyResARV = (RATE * totalEmptyR * 12)
-	const emptyComARV = (RATE * totalEmptyC * 12) * COMMERCIAL_MULTIPLIER
-	const carpetResARV = (RATE * totalCarpetR * 12)
-	const carpetComARV = (RATE * totalCarpetC * 12) * COMMERCIAL_MULTIPLIER
+	const emptyResARV = (EMPTY_RATE * totalEmptyR * 12)
+	const emptyComARV = (EMPTY_RATE * totalEmptyC * 12) * COMMERCIAL_MULTIPLIER
+	const carpetResARV = (CARPET_RATE * totalCarpetR * 12)
+	const carpetComARV = (CARPET_RATE * totalCarpetC * 12) * COMMERCIAL_MULTIPLIER
 
 
 	const totalARV = (emptyResARV + emptyComARV + carpetResARV + carpetComARV);
