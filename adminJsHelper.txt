@@ -1,0 +1,30 @@
+
+--> first problem statement "what is a custom , and how does it works"
+
+properties: {
+  from9to12m: {
+    components: {
+      edit: AdminCustomComponents.RateModelEditComponent
+    },
+    custom: { path: "from9to12m" }
+  }
+}
+
+
+What custom does
+
+The custom object is optional metadata that you can pass into your component.
+
+Whatever you put inside custom will be available in your component props as props.property.custom.
+
+This is not stored in MongoDB. It’s purely for passing extra information to your AdminJS component.
+
+So in your component:
+
+const RateModelEditComponent = (props) => {
+  const { property } = props
+  console.log(property.custom.path) // "from9to12m"
+}
+
+
+Now you can access "from9to12m" inside your component even if, for some reason, property.path is ambiguous.
