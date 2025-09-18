@@ -17,6 +17,10 @@ import { Rate } from '../models/rateModel.js'
 // import RateModelEdit from '../admin/components/RateModelEdit.jsx'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 import uploadFeature from "@adminjs/upload";
+import { Surveyor } from '../models/surveyorModel.js'
+import { createNewSurveyorDoc, updateSurveryorData, verifyAdmin, verifySurveyById } from '../admin/adminUtils/adminUtils.js'
+import mongoose from 'mongoose'
+import { activityLogger } from '../utils/activityLogger.js'
 
 console.log("__dirname is : ", __dirname)
 console.log("current process.pwd() is : ", process.cwd())
@@ -90,13 +94,13 @@ const adminJs = new AdminJS({
 				actions: {
 					new: {
 						before: async (request) => {
-							console.log('Request payload:', request.payload);
+							// console.log('Request payload:', request.payload);
 							return request;
 						},
 					},
 					edit: {
 						before: async (request) => {
-							console.log('Edit Request payload:', request.payload);
+							// console.log('Edit Request payload:', request.payload);
 							return request;
 						},
 					}
@@ -192,16 +196,16 @@ const adminJs = new AdminJS({
 				}),
 			],
 			options: {
-				listProperties: [
-					"ward",
-					"houseNumber",
-					"interviewerName",
-					"fatherName"
-				],
+				// listProperties: [
+				// 	"ward",
+				// 	"houseNumber",
+				// 	"interviewerName",
+				// 	"fatherName"
+				// ],
 				actions: {
 					new: {
-						before: async (request) => {
-							console.log('Request payload:', request.payload);
+						before: async (request, context) => {
+							// console.log('Request payload:', request.payload);
 
 							// now here we have to perform the calculations like calculating the tax and arv and overall
 							const roadWidthType = request.payload["roadWidthType"]
@@ -214,13 +218,42 @@ const adminJs = new AdminJS({
 							request.payload["totalTax"] = tax.totalTax
 							request.payload["totalARV"] = tax.totalARV
 							request.payload["taxinfo"] = tax.taxinfo
+
+							// here we have to store this activity in Activity Logs Model
+							const schemaId = request.payload?._id;
+							const schemaModel = "Property";
+							const message = "New Property is created";
+							const event = "INSERTED";
+							const performedBy = context.currentAdmin?.id;
+							const { password, ...performedByUserData } = context.currentAdmin;
+							console.log("performedByUserData is : ", performedByUserData)
+
+							const activity = { schemaId, schemaModel, message, event, performedBy, performedByUserData }
+							activityLogger(activity)
+
+
+
 							return request;
 						},
+						after: async (response, request, context) => {
+
+							let { surveyor: id, isSurveyVerified = false } = response.record.params;
+							id = new mongoose.Types.ObjectId(id)
+							console.log(typeof (id))
+							console.log(id)
+
+
+							updateSurveryorData(id, isSurveyVerified)
+
+							return response
+						}
 					},
 					edit: {
-						before: async (request) => {
+						before: async (request, context) => {
 
-							console.log("request.payload inside edit.before is :", request.payload);
+							// console.log("request.payload inside edit.before is :", request.payload);
+							// console.log("context in edit before : " , context)
+							context.prevIsVerifiedValue = context?.record?.params?.isSurveyVerified
 
 
 							if (request.payload['floorsData.numberOfFloors']) {
@@ -229,8 +262,8 @@ const adminJs = new AdminJS({
 								const propertyType = request.payload["propertyType"]
 								const floorsData = buildFloorsData(request.payload);
 
-								console.log("edit road width data : ", roadWidthType)
-								console.log("edit construction data : ", constructionType)
+								// console.log("edit road width data : ", roadWidthType)
+								// console.log("edit construction data : ", constructionType)
 
 								// console.log("floors data : " , floorsData)
 
@@ -254,6 +287,18 @@ const adminJs = new AdminJS({
 								console.log("floors data doesn't exist in payload");
 							}
 
+							// here we have to store this activity in Activity Logs Model
+							const schemaId = request.payload?._id;
+							const schemaModel = "Property";
+							const message = "Property is Edited";
+							const event = "UPDATED";
+							const performedBy = context.currentAdmin?.id;
+							const { password, ...performedByUserData } = context.currentAdmin;
+							console.log("performedByUserData is : ", performedByUserData)
+
+							const activity = { schemaId, schemaModel, message, event, performedBy, performedByUserData }
+							activityLogger(activity)
+
 							// console.log("after rebuilt the payload is : ", request.payload)
 
 							return request;
@@ -262,15 +307,43 @@ const adminJs = new AdminJS({
 
 							// console.log("response after (before) : " ,response.record.params )
 
+							// console.log("context in after before : " , context)
+
 							if (response.record && response.record.params['floorsData.numberOfFloors']) {
 								response.record.params.floorsData = buildFloorsData(response.record.params);
 							}
 							// console.log("response after :  " , response.record.params.floorsData)
+
+							// console.log("inside the propertie's after")
+							let { surveyor: id } = response.record.params;
+							id = new mongoose.Types.ObjectId(id)
+							console.log(typeof (id))
+
+							// now lets check if the isVerfied field is being updated or not.?
+							const prevIsVerifiedValue = context.prevIsVerifiedValue;
+							const newIsVerifiedValue = response?.record?.params?.isSurveyVerified;
+
+							console.log("prev value : ", prevIsVerifiedValue)
+							console.log("new value : ", newIsVerifiedValue)
+
+							const checks = [undefined, null]
+
+							if (!checks.includes(prevIsVerifiedValue) && !checks.includes(newIsVerifiedValue)) {
+								if (!prevIsVerifiedValue && newIsVerifiedValue) verifySurveyById(id, 1);
+								if (prevIsVerifiedValue && !newIsVerifiedValue) verifySurveyById(id, -1);
+							}
+
 							return response;
 						}
 					}
 				},
 				properties: {
+					"isSurveyVerified": {
+						isDisabled: ({ currentAdmin }) => !(currentAdmin && currentAdmin.role === 'admin'),
+					},
+					"PPIN": {
+						isVisible: { list: false, edit: false, filter: false, show: true }
+					},
 					"floorsData": {
 						type: "mixed",
 						components: {
@@ -282,12 +355,12 @@ const adminJs = new AdminJS({
 							edit: AdminCustomComponents.GetLocationComp
 						}
 					},
-					"createdAt" : {isVisible : false},
-					"updatedAt" : {isVisible : false},
-					"receiptWithSign" : {isVisible : false},
-					"ownerInterviewer" : {isVisible : false},
-					"IDProof" : {isVisible : false},
-					"houseFrontWithNamePlate" : {isVisible : false},
+					"createdAt": { isVisible: false },
+					"updatedAt": { isVisible: false },
+					"receiptWithSign": { isVisible: false },
+					"ownerInterviewer": { isVisible: false },
+					"IDProof": { isVisible: false },
+					"houseFrontWithNamePlate": { isVisible: false },
 				}
 			}
 		},
@@ -299,24 +372,62 @@ const adminJs = new AdminJS({
 					new: {
 						isAccessible: ({ currentAdmin }) => currentAdmin?.role == "admin",
 						before: async (request) => {
+
+							console.log("payload is : ", request.payload)
+
+							// here we are storing password in hashed way just before saving
+							// here updating the password
 							if (request.payload.password) {
 								request.payload = {
 									...request.payload,
 									password: await bcrypt.hash(request.payload.password, 10),
 								};
 							}
+
+							// here after creating a new document inside the surveyor schema if the role is surveyor
+							createNewSurveyorDoc(request.payload).then(res => console.log(res))
+
+
+							// here we have to store this activity in Activity Logs Model
+							const schemaId = request.payload?._id;
+							const schemaModel = "USER";
+							const message = "New User is created";
+							const event = "INSERTED";
+							const performedBy = context.currentAdmin?.id;
+							const { password, ...performedByUserData } = context.currentAdmin;
+							console.log("performedByUserData is : ", performedByUserData)
+
+							const activity = { schemaId, schemaModel, message, event, performedBy, performedByUserData }
+							activityLogger(activity)
+
+
 							return request;
 						}
 					},
 					edit: {
 						isAccessible: ({ currentAdmin }) => currentAdmin?.role == "admin",
-						before: async (request) => {
+						before: async (request , context) => {
+							if(!request.payload._id) return request
+							
 							if (request.payload.password) {
 								request.payload = {
 									...request.payload,
 									password: await bcrypt.hash(request.payload.password, 10),
 								};
 							}
+
+							// here we have to store this activity in Activity Logs Model
+							const schemaId = request.payload?._id;
+							const schemaModel = "USER";
+							const message = "New User is created";
+							const event = "UPDATED";
+							const performedBy = context.currentAdmin?.id;
+							const { password, ...performedByUserData } = context.currentAdmin;
+							console.log("performedByUserData is : ", performedByUserData)
+
+							const activity = { schemaId, schemaModel, message, event, performedBy, performedByUserData }
+							activityLogger(activity)
+
 							return request;
 						}
 					},
@@ -329,6 +440,38 @@ const adminJs = new AdminJS({
 					show: {
 						isAccessible: ({ currentAdmin }) => currentAdmin?.role == "admin",
 					},
+				},
+				properties: {
+					createdAt: { isVisible: false },
+					updatedAt: { isVisible: false },
+				}
+			}
+		},
+		{
+			resource: Surveyor,
+			options: {
+				navigation: "Admin Only",
+				actions: {
+					new: {
+						isAccessible: ({ currentAdmin }) => currentAdmin?.role == "admin",
+					},
+					edit: {
+						// isAccessible: ({ currentAdmin }) => currentAdmin?.role == "admin",
+						isAccessible: false,
+					},
+					list: {
+						isAccessible: ({ currentAdmin }) => currentAdmin?.role == "admin",
+					},
+					delete: {
+						isAccessible: ({ currentAdmin }) => currentAdmin?.role == "admin",
+					},
+					show: {
+						isAccessible: ({ currentAdmin }) => currentAdmin?.role == "admin",
+					},
+				},
+				properties: {
+					createdAt: { isVisible: false },
+					updatedAt: { isVisible: false },
 				}
 			}
 		},
@@ -352,9 +495,46 @@ const adminJs = new AdminJS({
 					},
 					new: {
 						isAccessible: ({ currentAdmin }) => currentAdmin?.role == "admin",
+						before : async(request , context)=>{
+							// here we have to store this activity in Activity Logs Model
+
+							if(!request.payload._id) return request
+
+							const schemaId = request.payload?._id;
+							const schemaModel = "RATE";
+							const message = "New Rate is created";
+							const event = "INSERTED";
+							const performedBy = context.currentAdmin?.id;
+							const { password, ...performedByUserData } = context.currentAdmin;
+							console.log("performedByUserData is : ", performedByUserData)
+
+							const activity = { schemaId, schemaModel, message, event, performedBy, performedByUserData }
+							activityLogger(activity)
+
+							return request
+						}
 					},
 					edit: {
 						isAccessible: ({ currentAdmin }) => currentAdmin?.role == "admin",
+						before : async(request , context)=>{
+
+							if(!request.payload._id) return request
+							// here we have to store this activity in Activity Logs Model
+							console.log("request payload is : " , request.payload)
+							const schemaId = request.payload?._id;
+							const schemaModel = "RATE";
+							const message = "Rate is Updated";
+							const event = "UPDATED";
+							const performedBy = context.currentAdmin?.id;
+							const { password, ...performedByUserData } = context.currentAdmin;
+							console.log("performedByUserData is : ", performedByUserData)
+
+							const activity = { schemaId, schemaModel, message, event, performedBy, performedByUserData }
+							console.log("activity is : " , activity)
+							activityLogger(activity)
+
+							return request
+						}
 					},
 					delete: {
 						isAccessible: ({ currentAdmin }) => currentAdmin?.role == "admin",

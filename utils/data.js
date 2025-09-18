@@ -252,4 +252,4 @@ const getKeyByValue = (value , obj)=>{
 }
 
 
-export {ConstructionType , PropertyType , getKeyByValue , PropertyTypeReverseMapping , ConstructionTypeReverseMapping , RoadWidthTypeReverseMapping , RoadWidthType , MultiplierCommercial}
+export {ConstructionType , PropertyType , getKeyByValue , PropertyTypeReverseMapping , ConstructionTypeReverseMapping , RoadWidthTypeReverseMapping , RoadWidthType , MultiplierCommercial , reserverTheObject}

@@ -6,7 +6,7 @@ export const calculateRate = async(roadType , constructionType)=>{
 	const rates = await Rate.findOne().sort({createdAt : -1})
 	console.log("rates are : " , rates)
 	console.log("roadtype" , roadType , "constructionType" , constructionType)
-	return  {carpetRate : rates[roadType][constructionType] ,  emptyRate : rates[roadType][plot] }
+	return  {carpetRate : rates[roadType][constructionType] ,  emptyRate : rates[roadType]["plot"] }
 	// return rates[roadType][constructionType] || null
 }
 

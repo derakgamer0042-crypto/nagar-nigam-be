@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 import { ConstructionType, PropertyType, RoadWidthType, RoadWidthTypeReverseMapping } from "../utils/data.js"
+import { handleError } from "../utils/ErrorHandler.js";
+// import { toIST } from "../utils/dateUtils.js";
+import { customAlphabet } from "nanoid"
 
 // ---------------- Floor Schema ----------------
 const floorSchema = new mongoose.Schema({
@@ -56,6 +59,7 @@ const surroundingSchema = new mongoose.Schema({
 
 // ---------------- Main Property Schema ----------------
 const propertySchema = new mongoose.Schema({
+  PPIN : {type : String , trim : true},
   ward: { type: String, trim: true },
   locality: { type: String, trim: true },
   houseNumber: { type: String, trim: true },
@@ -98,7 +102,7 @@ const propertySchema = new mongoose.Schema({
       lattitude: { type: String },
       longitude: { type: String }
     },
-    _id : false
+    _id: false
   },
   // uploadPictures :{
   //   type : {
@@ -109,10 +113,51 @@ const propertySchema = new mongoose.Schema({
   //   },
   //   _id : false
   // }
-  receiptWithSign : {type : String},
-  ownerInterviewer : {type : String},
-  IDProof : {type : String},
-  houseFrontWithNamePlate : {type : String}
+  receiptWithSign: { type: String },
+  ownerInterviewer: { type: String },
+  IDProof: { type: String },
+  houseFrontWithNamePlate: { type: String },
+  isSurveyVerified: { type: Boolean , default : false},
+  surveyor: { type: mongoose.Schema.Types.ObjectId, ref: 'Surveyor' }
 }, { timestamps: true, strict: false });
+
+
+
+const generateNumericId = customAlphabet('0123456789', 6);
+
+
+propertySchema.pre("save",function(next){
+  try {
+
+    const currentDate = new Date()
+
+    if (this.isNew){
+      // this.createdAt = toIST(currentDate)
+      const ppinNumber = generateNumericId()
+      this.PPIN = ppinNumber
+    }
+
+    // this.updatedAt = toIST(currentDate)
+    next()
+
+  } catch (err) {
+    handleError({ message: err.message, status: 501, funcName: "propertSchema Model" })
+    next(err);
+  }
+})
+
+// propertySchema.pre(['updateOne', 'findOneAndUpdate', 'updateMany'], function(next){
+//   try {
+
+//     const currentDate = new Date();
+//     const istNow = toIST(currentDate);
+//     this.set({ updatedAt: istNow }); 
+//     next();
+
+//   } catch (err) {
+//     handleError({ message: err.message, status: 501, funcName: "propertySchema Model" })
+//     next(err)
+//   }
+// })
 
 export const Property = mongoose.model("Property", propertySchema);
