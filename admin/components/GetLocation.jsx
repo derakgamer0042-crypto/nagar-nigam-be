@@ -9,8 +9,11 @@ const GetLocation = (props) => {
   console.log("property : ", property);
 
   // extract nested location values
-  const latitude = record?.params["location.latitude"] || ""; 
-  const longitude = record?.params["location.longitude"] || "";
+  let latitude = record?.params["location.latitude"] || ""; 
+  let longitude = record?.params["location.longitude"] || "";
+
+  // if(!latitude) record?.params?.location?.latitude
+  // if(!longitude) record?.params?.location?.longitude
 
   const handleGetLocation = () => {
     if (navigator.geolocation) {
@@ -51,11 +54,12 @@ const GetLocation = (props) => {
         />
       </Box>
 
-      <Box marginTop="10px">
+      {onChange && <Box marginTop="10px">
         <Button variant="primary" type="button" onClick={handleGetLocation}>
           Get Location
         </Button>
-      </Box>
+      </Box>}
+      
     </Box>
   );
 };

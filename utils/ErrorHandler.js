@@ -14,3 +14,8 @@ export const handleError = (err, res = null) => {
 	// Otherwise, just return error object
 	return err;
 };
+
+export const flagError = (err , funcName , res=null)=>{
+	console.log("Got Error in " , funcName , " " , err.message);
+	if(res) return res.status(500).json({success : false , message : "Something went wrong"})
+}

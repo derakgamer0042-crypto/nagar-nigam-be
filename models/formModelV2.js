@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { set } from "mongoose";
 import { ConstructionType, PropertyType, RoadWidthType, RoadWidthTypeReverseMapping } from "../utils/data.js"
 import { handleError } from "../utils/ErrorHandler.js";
 // import { toIST } from "../utils/dateUtils.js";
@@ -11,10 +11,10 @@ const floorSchema = new mongoose.Schema({
     enum: ["residential", "commercial", "mixed"],
     required: true
   },
-  carpetAreaC: { type: Number },
-  emptyAreaC: { type: Number },
-  carpetAreaR: { type: Number },
-  emptyAreaR: { type: Number }
+  carpetAreaC: { type: Number , set : v=> v === '' ? null : Number(v) },
+  emptyAreaC: { type: Number ,  set : v=> v === '' ? null : Number(v) },
+  carpetAreaR: { type: Number ,  set : v=> v === '' ? null : Number(v) },
+  emptyAreaR: { type: Number ,  set : v=> v === '' ? null : Number(v) }
 }, { _id: false });
 
 // ---------------- Floors Wrapper ----------------
@@ -74,6 +74,7 @@ const propertySchema = new mongoose.Schema({
   },
   ownerName: { type: String, trim: true },
   guardianName: { type: String, trim: true },
+  phoneNumber : {type : Number},
 
   // Property info
   constructionYear: { type: Number },
@@ -85,6 +86,7 @@ const propertySchema = new mongoose.Schema({
   aadharNumber: { type: Number },
   propertyName: { type: String, trim: true },
   sequenceNumber: { type: Number },
+  email : {type : String , trim : true},
 
   propertyType: { type: String, trim: true, enum: Object.values(PropertyType) },
   constructionType: { type: String, trim: true, enum: Object.values(ConstructionType) },
@@ -118,7 +120,9 @@ const propertySchema = new mongoose.Schema({
   IDProof: { type: String },
   houseFrontWithNamePlate: { type: String },
   isSurveyVerified: { type: Boolean , default : false},
-  surveyor: { type: mongoose.Schema.Types.ObjectId, ref: 'Surveyor' }
+  surveyor: { type: mongoose.Schema.Types.ObjectId, ref: 'Surveyor' },
+  totalTaxPaid : {type : Number},
+  propertyGroup : {type : String , enum : ["governmentOffices" , "schoolsAndColleges" , "hospitalsAndClinics" , "parksAndRecreation" , "transportHubs" , "localShops"]}
 }, { timestamps: true, strict: false });
 
 

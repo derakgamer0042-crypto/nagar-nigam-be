@@ -2,7 +2,7 @@
 
 import express from "express"
 import {protect} from "../middlewares/protect.js"
-import { getSurveyorDataForRecord } from "../controllers/adminDashboardController.js";
+import { chartStatsData, chartStatsDataInDepth, getDashboardStats, getLatestSurveyActivities, getSurveyorDataForRecord, getUserData, login } from "../controllers/adminDashboardController.js";
 
 export const router = express.Router();
 
@@ -13,6 +13,10 @@ export const router = express.Router();
 // router.use(adminOnly)
 
 
-
+router.post("/get-recent-activities" , getLatestSurveyActivities)
 router.post("/surveyor-info" , getSurveyorDataForRecord)
-
+router.post("/login" , login)
+router.post("/stats" , getDashboardStats)
+router.post("/user-view" , getUserData)
+router.post("/graph-stats" , chartStatsData)
+router.post("/graph-stats-detail" , chartStatsDataInDepth)

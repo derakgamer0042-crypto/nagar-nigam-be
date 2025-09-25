@@ -18,10 +18,12 @@ export const getCommercialMultiplier = (propertyType)=>{
 		category4 : 3,
 	}
 
-	const category = Object.entries(MultiplierCommercial).find(([key , value])=>{
+	let category = Object.entries(MultiplierCommercial).find(([key , value])=>{
 		const foundCategoryObj = Object.entries(value).find(([nestKey , nestValue])=> nestValue == propertyType);
 		return foundCategoryObj
 	})
+
+	if(!category) category = "category4"
 
 	return priceCategory[category[0]]
 
@@ -47,6 +49,8 @@ export const calculateTax = async(floorsData , roadType , constructionType , pro
 	// return
 	const { floors, numberOfFloors } = floorsData
 
+	console.log("number of floors : " , floors)
+
 	let totalEmptyR = 0;
 	let totalEmptyC = 0;
 	let totalCarpetR = 0;
@@ -60,11 +64,21 @@ export const calculateTax = async(floorsData , roadType , constructionType , pro
 		totalEmptyC += floor.emptyAreaC
 		totalCarpetR += floor.carpetAreaR
 		totalCarpetC += floor.carpetAreaC
+
+		console.log("index : " , index , " result : ")
+		console.log("totalEmptyR =  " , totalEmptyR);
+		console.log("totalEmptyC =  " , totalEmptyC);
+		console.log("totalCarpetR =  " , totalCarpetR);
+		console.log("totalCarpetC =  " , totalCarpetC);
+
+		console.log("\n==========================================\n")
+
 		index++;
 	}
 
 	// here we are calculating RATE on the basis of roadType and constructionType
 	const {carpetRate : CARPET_RATE , emptyRate : EMPTY_RATE} = await calculateRate(roadType , constructionType)
+	console.log("Carpet rate is : " , CARPET_RATE , "empty rate is : "  , EMPTY_RATE)
 
 	// const COMMERCIAL_MULTIPLIER = 3
 	// here we are calculating the multiplier for commercial area
@@ -75,6 +89,19 @@ export const calculateTax = async(floorsData , roadType , constructionType , pro
 	const emptyComARV = (EMPTY_RATE * totalEmptyC * 12) * COMMERCIAL_MULTIPLIER
 	const carpetResARV = (CARPET_RATE * totalCarpetR * 12)
 	const carpetComARV = (CARPET_RATE * totalCarpetC * 12) * COMMERCIAL_MULTIPLIER
+
+
+	console.log("\n================ Final Total Areas  ==========================\n")
+	console.log("final totalEmptyR =  " , totalEmptyR);
+	console.log("final totalEmptyC =  " , totalEmptyC);
+	console.log("final totalCarpetR =  " , totalCarpetR);
+	console.log("final totalCarpetC =  " , totalCarpetC);
+
+	console.log("\n==================== Final Total ARVs ======================\n")
+	console.log("emptyResARV : " ,emptyResARV);
+	console.log("emptyComARV : " ,emptyComARV);
+	console.log("carpetResARV : " ,carpetResARV);
+	console.log("carpetComARV : " ,carpetComARV);
 
 
 	const totalARV = (emptyResARV + emptyComARV + carpetResARV + carpetComARV);

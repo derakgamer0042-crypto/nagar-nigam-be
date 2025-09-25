@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken"
 
-export const generateAndSendToken = async(user, res) => {
+export const generateAndSendToken = (user, res) => {
 	try {
 
 		const {password , ...payload} = user;
@@ -9,7 +9,8 @@ export const generateAndSendToken = async(user, res) => {
 
 		res.cookie("token", token, {
 			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
+			// secure: process.env.NODE_ENV === "production",
+			secure : true,
 			sameSite: "strict",
 			maxAge: 60 * 60 * 1000,
 		})

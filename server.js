@@ -10,13 +10,21 @@ import {sessionMiddleware} from "./middlewares/sessionMiddleware.js"
 
 // importing all the woutes
 import {router as adminDashboardRoutes} from "./routes/adminDashboardRoutes.js"
+import {router as usersData} from "./routes/usersRoutes.js"
+import {router as publicRouter} from "./routes/publicRoutes.js"
+import { getPropertyStats } from "./test.js"
 
 const PORT = process.env.PORT || 4000
 
 const app = express();
 
 
-app.use(cors())
+app.use(cors({
+	// origin : [process.env.FRONTEND_URL],
+	// origin : "http://localhost:3000",
+	origin : process.env.FRONTEND_URL,
+	credentials : true
+}))
 
 app.use(sessionMiddleware(process.env.MONGO_URI));
 
@@ -34,6 +42,29 @@ app.get("/", (_ , res) => {
 })
 
 app.use("/admin-info" , adminDashboardRoutes)
+app.use("/public" ,publicRouter)
+app.use("/users-data" , usersData)
+
+app.use((err, req, res, next) => {
+  if (!err) {
+    // Handle 404 Not Found for unmatched routes
+    console.error("404 Not Found:", req.originalUrl);
+    return res.status(404).json({
+      status: "fail",
+      message: "OOPS!! This Route is not valid!!",
+    });
+  }
+
+  // Handle other errors
+  console.error("Sorry got ERROR", err.message);
+  res.status(err.statusCode || 500).json({
+    status: "error",
+    message: err.message || "Internal Server Error",
+  });
+});
+
+
+
 
 
 const startServer = async()=>{

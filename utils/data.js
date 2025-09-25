@@ -66,6 +66,7 @@ const PropertyType = {
 };
 
 
+
 // Multiplier = {
 //    category1: {
 //     hostel: "छात्रावास",
@@ -153,7 +154,7 @@ const MultiplierCommercial = {
     liquorShopBeerBar: "शराब की दुकान / बियर बार",
     gym: "जिम",
     welfareHall: "कल्याण मंडप",
-    hairDresser: "नाई / हेयर ड्रेसर" // not in your object explicitly, but from screenshot
+    // hairDresser: "नाई / हेयर ड्रेसर" // ⚠️ not in 64 list, only in screenshot
   },
 
   category2: {
@@ -161,7 +162,7 @@ const MultiplierCommercial = {
     residenceAndMedicalStore: "आवास और मेडिकल स्टोर",
     multiStoreyCommercialEstablishment: "बहु मंजिला व्यवसायिक प्रतिष्ठान",
     privateLimitedCompany: "प्रा. लिमिटेड कंपनी",
-    governmentCoaching: "सरकारी कोचिंग सेंटर" // mapping as per screenshot
+    // governmentCoaching: "सरकारी कोचिंग सेंटर" // ⚠️ not in 64 list
   },
 
   category3: {
@@ -188,7 +189,7 @@ const MultiplierCommercial = {
     banquetHall: "बैंक्वेट हॉल",
     marriageHome: "मैरिज होम",
     marriageClub: "विवाह क्लब",
-    welfareHall: "कल्याण मंडप",
+    // welfareHall: "कल्याण मंडप", // ⚠️ already in category1
     tvTower: "टी.वी टावर",
     telecomTower: "दूरसंचार टावर",
     tower: "टॉवर",
@@ -217,6 +218,7 @@ const MultiplierCommercial = {
     hoarding: "होर्डिंग"
   }
 };
+
 
 const ConstructionType = {
   permanentWithRccRbcRoof: "पक्का भवन / RCC या RBC छत सहित",
@@ -250,6 +252,70 @@ const getKeyByValue = (value , obj)=>{
 	const block = Object.entries(obj).find((el)=> el[1] === value)
 	return block ? block[0] : null
 }
+
+
+
+export const classifiedGroups = {
+  governmentOffices: [
+    PropertyType.governmentOffice,
+    PropertyType.governmentBuilding,
+    PropertyType.semiGovernmentOffice,
+    PropertyType.office
+  ],
+  schoolsAndColleges: [
+    PropertyType.educationalInstitution,
+    PropertyType.governmentSchool,
+    PropertyType.coachingCenter,
+    PropertyType.library,
+    PropertyType.hostel
+  ],
+  hospitalsAndClinics: [
+    PropertyType.hospital,
+    PropertyType.clinic,
+    PropertyType.nursingHome,
+    PropertyType.polyclinic,
+    PropertyType.residenceAndClinic,
+    PropertyType.residenceAndMedicalStore,
+    PropertyType.diagnosticCenter,
+    PropertyType.healthCareCenter,
+    PropertyType.medicalStore,
+    PropertyType.physicalHealthCenterEtc
+  ],
+  parksAndRecreation: [
+    PropertyType.sportsCenter,
+    PropertyType.club,
+    PropertyType.gym,
+    PropertyType.welfareHall,
+    PropertyType.theater,
+    PropertyType.multiplex,
+    PropertyType.banquetHall
+  ],
+  transportHubs: [
+    PropertyType.coalDepot,
+    PropertyType.garage,
+    PropertyType.petrolPump,
+    PropertyType.telecomTower,
+    PropertyType.tvTower
+  ],
+  localShops: [
+    PropertyType.shop,
+    PropertyType.residenceAndShop,
+    PropertyType.atm,
+    PropertyType.bank,
+    PropertyType.pubs,
+    PropertyType.bar,
+    PropertyType.liquorShopBeerBar,
+    PropertyType.hotel,
+    PropertyType.hotelBar,
+    PropertyType.hotelRestaurant,
+    PropertyType.privateHotel,
+    PropertyType.upToThreeStarHotels,
+    PropertyType.fourStarAndAboveHotels,
+    PropertyType.malls,
+    PropertyType.multiplex
+  ]
+};
+
 
 
 export {ConstructionType , PropertyType , getKeyByValue , PropertyTypeReverseMapping , ConstructionTypeReverseMapping , RoadWidthTypeReverseMapping , RoadWidthType , MultiplierCommercial , reserverTheObject}
