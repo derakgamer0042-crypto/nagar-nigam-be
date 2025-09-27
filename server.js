@@ -13,6 +13,8 @@ const app = express();
 
 
 
+// console.log("testing server")
+
 
 
 await connectDB()
