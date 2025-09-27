@@ -13,7 +13,7 @@ export const getLocations = async (req, res) => {
 
 		const propertyGroups = Object.keys(classifiedGroups);
 		const data = {};
-		const ALL_LOCATIONS_KEY = "All Locations";
+		const ALL_LOCATIONS_KEY = "allLocations";
 
 		// Initialize arrays
 		data[ALL_LOCATIONS_KEY] = [];
